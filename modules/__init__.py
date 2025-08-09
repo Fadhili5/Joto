@@ -1,0 +1,1 @@
+# Modules directory for environmental analysis components

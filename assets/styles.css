@@ -1,0 +1,130 @@
+/* Environmental Analysis App Custom Styles */
+
+/* Main container styling */
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Sidebar styling */
+.css-1d391kg {
+    background-color: #f0f8f0;
+}
+
+/* Header styling */
+h1 {
+    color: #2e7d32;
+    border-bottom: 3px solid #4caf50;
+    padding-bottom: 10px;
+}
+
+h2 {
+    color: #388e3c;
+}
+
+h3 {
+    color: #43a047;
+}
+
+/* Metric cards styling */
+.css-1xarl3l {
+    background-color: #f1f8e9;
+    border: 1px solid #c8e6c9;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+/* Button styling */
+.stButton > button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.stButton > button:hover {
+    background-color: #45a049;
+}
+
+/* File uploader styling */
+.css-1cpxqw2 {
+    border: 2px dashed #4caf50;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #f9fbe7;
+}
+
+/* Progress bar styling */
+.stProgress > div > div > div {
+    background-color: #4caf50;
+}
+
+/* Alert styling */
+.stAlert {
+    border-radius: 8px;
+}
+
+/* Success alert */
+.stAlert[data-baseweb="notification"] {
+    background-color: #e8f5e8;
+    border-left: 4px solid #4caf50;
+}
+
+/* Error alert */
+.stAlert[data-baseweb="notification"][kind="error"] {
+    background-color: #ffebee;
+    border-left: 4px solid #f44336;
+}
+
+/* Warning alert */
+.stAlert[data-baseweb="notification"][kind="warning"] {
+    background-color: #fff8e1;
+    border-left: 4px solid #ff9800;
+}
+
+/* Info alert */
+.stAlert[data-baseweb="notification"][kind="info"] {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+/* Dataframe styling */
+.dataframe {
+    border: 1px solid #c8e6c9;
+    border-radius: 8px;
+}
+
+/* Map container styling */
+.folium-map {
+    border: 2px solid #c8e6c9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Chart container styling */
+.plotly-graph-div {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Navigation styling */
+.css-17eq0hr {
+    background-color: #2e7d32;
+    color: white;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .main .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .css-1d391kg {
+        width: 100%;
+    }
+}

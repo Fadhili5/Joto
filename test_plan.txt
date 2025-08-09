@@ -1,0 +1,15 @@
+Test Development Plan
+
+This is a test development plan document to verify the file upload functionality.
+
+Project: Test Residential Complex
+Location: Test Area
+Description: A sample development plan for testing purposes.
+
+Key Features:
+- 20 residential units
+- Green spaces
+- Parking facilities
+- Community center
+
+This document is for testing the community voting platform upload functionality.
