@@ -8,7 +8,7 @@ import base64
 
 # Page configuration
 st.set_page_config(
-    page_title="EcoVision Analytics",
+    page_title="Kili Watch",
     page_icon="🌍",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -159,7 +159,7 @@ def main():
     # Main header with gradient background
     st.markdown("""
     <div class="main-header">
-        <h1 class="app-title">🌍 EcoVision Analytics</h1>
+        <h1 class="app-title">🌍 KiliWatch Analytics</h1>
         <p class="app-subtitle">
             Advanced environmental intelligence platform powered by satellite data and AI.<br>
             Transform urban planning with real-time temperature analysis, green space optimization, and building sustainability assessment.<br>
@@ -413,7 +413,7 @@ def main():
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown("""
     <div style='text-align: center; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 2rem; border-radius: 15px; margin-top: 2rem;'>
-        <h3>🌍 EcoVision Analytics</h3>
+        <h3>🌍 KiliWatch Analytics</h3>
         <p style='font-size: 1.1rem; margin: 1rem 0;'>Empowering sustainable urban development through advanced environmental intelligence</p>
         <p style='opacity: 0.9;'>Built with ❤️ using Streamlit | Powered by AI & Satellite Technology</p>
         <p style='opacity: 0.8; font-size: 0.9rem;'>🌱 Making cities greener, smarter, and more sustainable</p>
