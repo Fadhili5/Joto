@@ -6,11 +6,223 @@ from pathlib import Path
 import os
 import uuid
 import shutil
+import africastalking
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # File upload constants
 ALLOWED_FILE_TYPES = ['pdf', 'doc', 'docx', 'txt']
 MAX_FILE_SIZE_MB = 10
 UPLOADS_DIR = Path("uploads")
+
+# Initialize AfricasTalking
+try:
+    africastalking.initialize(
+    username="fadhil",  # Your Africa's Talking username
+    api_key=os.getenv("AT_API_KEY")
+    )
+    sms = africastalking.SMS
+    SMS_ENABLED = True
+except Exception as e:
+    st.warning(f"SMS service not available: {e}")
+    SMS_ENABLED = False
+
+def initialize_sms_data():
+    """Initialize SMS notification data in session state"""
+    if 'subscriber_phones' not in st.session_state:
+        st.session_state.subscriber_phones = []
+    
+    if 'sms_notifications_enabled' not in st.session_state:
+        st.session_state.sms_notifications_enabled = True
+
+def send_sms_notification(phone_numbers, message):
+    """Send SMS notification to list of phone numbers"""
+    if not SMS_ENABLED or not st.session_state.get('sms_notifications_enabled', True):
+        return False
+    
+    try:
+        # Format phone numbers for AfricasTalking (ensure +254 prefix)
+        formatted_numbers = []
+        for phone in phone_numbers:
+            # Remove any existing country code and add +254
+            phone_str = str(phone).replace('+', '').replace('254', '')
+            if phone_str.startswith('0'):
+                phone_str = phone_str[1:]  # Remove leading 0
+            formatted_numbers.append(f"+254{phone_str}")
+        
+        # Send SMS
+        sender = "AFTKNG"
+        response = sms.send(message, formatted_numbers, sender)
+        return True
+    
+    except Exception as e:
+        st.error(f"Failed to send SMS notifications: {e}")
+        return False
+
+def notify_new_development_plan(plan_title, plan_type):
+    """Send SMS notification when new development plan is uploaded"""
+    if not st.session_state.subscriber_phones:
+        return
+    
+    message = f"🏗️ NEW DEVELOPMENT PLAN ALERT\n\nTitle: {plan_title}\nType: {plan_type}\n\nVisit the Community Voting platform to review and vote!\n\n- Community Alert System"
+    
+    success = send_sms_notification(st.session_state.subscriber_phones, message)
+    if success:
+        st.info(f"📱 SMS alerts sent to {len(st.session_state.subscriber_phones)} subscribers")
+
+def display_sms_management_section():
+    """Display SMS notification management section"""
+    st.header("📱 SMS Notification Management")
+    st.markdown("Manage SMS notifications for new development plan alerts.")
+    
+    # SMS service status
+    if SMS_ENABLED:
+        st.success("✅ SMS Service: Connected")
+    else:
+        st.error("❌ SMS Service: Not Available")
+        st.markdown("*Check your AfricasTalking API key configuration.*")
+        return
+    
+    # Toggle SMS notifications
+    st.subheader("⚙️ Notification Settings")
+    sms_enabled = st.checkbox(
+        "Enable SMS Notifications",
+        value=st.session_state.get('sms_notifications_enabled', True),
+        help="Turn SMS notifications on/off for new development plans"
+    )
+    st.session_state.sms_notifications_enabled = sms_enabled
+    
+    if not sms_enabled:
+        st.info("📵 SMS notifications are currently disabled")
+        return
+    
+    # Display current subscribers
+    st.subheader("📞 Current Subscribers")
+    if st.session_state.subscriber_phones:
+        st.success(f"📊 {len(st.session_state.subscriber_phones)} active subscribers")
+        
+        # Show subscriber list in a nice format
+        with st.expander("👥 View Subscriber List"):
+            for i, phone in enumerate(st.session_state.subscriber_phones, 1):
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.write(f"{i}. +254{phone}")
+                with col2:
+                    if st.button("🗑️", key=f"remove_{phone}", help="Remove subscriber"):
+                        st.session_state.subscriber_phones.remove(phone)
+                        st.success(f"Removed +254{phone} from subscribers")
+                        st.rerun()
+    else:
+        st.info("📝 No subscribers yet. Add phone numbers below.")
+    
+    # Add new subscriber
+    st.subheader("➕ Add New Subscriber")
+    
+    with st.form("add_subscriber_form"):
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            new_phone = st.text_input(
+                "Phone Number",
+                placeholder="e.g., 712345678 or 0712345678",
+                help="Enter Kenyan phone number (without country code)"
+            )
+        
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)  # Add some spacing
+            add_subscriber = st.form_submit_button("📱 Add Subscriber", type="primary")
+        
+        if add_subscriber and new_phone:
+            # Clean and validate phone number
+            clean_phone = new_phone.strip().replace('+', '').replace('254', '')
+            if clean_phone.startswith('0'):
+                clean_phone = clean_phone[1:]
+            
+            # Basic validation for Kenyan phone numbers
+            if len(clean_phone) == 9 and clean_phone.isdigit():
+                if clean_phone not in st.session_state.subscriber_phones:
+                    st.session_state.subscriber_phones.append(clean_phone)
+                    st.success(f"✅ Added +254{clean_phone} to SMS notifications")
+                    st.rerun()
+                else:
+                    st.warning(f"⚠️ +254{clean_phone} is already subscribed")
+            else:
+                st.error("❌ Invalid phone number format. Please enter a valid Kenyan phone number.")
+    
+    # Test SMS functionality
+    st.subheader("🧪 Test SMS Notifications")
+    
+    if st.session_state.subscriber_phones:
+        with st.form("test_sms_form"):
+            test_message = st.text_area(
+                "Test Message",
+                value="🧪 This is a test message from the Community Voting platform. SMS notifications are working correctly!",
+                help="Customize your test message"
+            )
+            
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                send_test = st.form_submit_button("📤 Send Test SMS", type="secondary")
+            
+            if send_test and test_message:
+                with st.spinner("Sending test SMS..."):
+                    success = send_sms_notification(st.session_state.subscriber_phones, test_message)
+                    if success:
+                        st.success(f"🎉 Test SMS sent to {len(st.session_state.subscriber_phones)} subscribers!")
+                    else:
+                        st.error("❌ Failed to send test SMS")
+    else:
+        st.info("📝 Add subscribers first to test SMS functionality")
+    
+    # Bulk add subscribers
+    st.subheader("📋 Bulk Add Subscribers")
+    with st.expander("📥 Import Multiple Phone Numbers"):
+        st.markdown("**Upload a text file or CSV with phone numbers (one per line)**")
+        
+        uploaded_file = st.file_uploader(
+            "Choose file",
+            type=['txt', 'csv'],
+            help="Upload a file containing phone numbers"
+        )
+        
+        if uploaded_file:
+            try:
+                # Read file content
+                content = uploaded_file.read().decode('utf-8')
+                lines = content.strip().split('\n')
+                
+                new_phones = []
+                invalid_phones = []
+                
+                for line in lines:
+                    phone = line.strip().replace('+', '').replace('254', '')
+                    if phone.startswith('0'):
+                        phone = phone[1:]
+                    
+                    if len(phone) == 9 and phone.isdigit():
+                        if phone not in st.session_state.subscriber_phones and phone not in new_phones:
+                            new_phones.append(phone)
+                    else:
+                        invalid_phones.append(line.strip())
+                
+                if new_phones:
+                    st.success(f"📱 Found {len(new_phones)} valid new phone numbers")
+                    
+                    if st.button("➕ Add All Valid Numbers"):
+                        st.session_state.subscriber_phones.extend(new_phones)
+                        st.success(f"✅ Added {len(new_phones)} subscribers")
+                        st.rerun()
+                
+                if invalid_phones:
+                    st.warning(f"⚠️ {len(invalid_phones)} invalid phone numbers found")
+                    with st.expander("View Invalid Numbers"):
+                        for phone in invalid_phones:
+                            st.write(f"• {phone}")
+                
+            except Exception as e:
+                st.error(f"❌ Error processing file: {e}")
 
 def validate_upload_form(title, description, files):
     """Validate the upload form inputs"""
@@ -119,6 +331,9 @@ def save_plan_metadata(title, description, plan_type, start_date, files):
         # Add to session state
         st.session_state.development_plans.append(plan_data)
         st.session_state.uploaded_files[plan_id] = saved_files
+        
+        # Send SMS notification for new development plan
+        notify_new_development_plan(title, plan_type)
         
         return plan_data
     
@@ -282,7 +497,7 @@ def display_development_plans_cards(plans, key_suffix=""):
                 ):
                     if cast_vote(plan['id'], 'upvote'):
                         st.success("✅ Upvote recorded!")
-                        st.rerun()  # Use st.rerun() instead of st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("❌ Failed to record vote")
             
@@ -296,7 +511,7 @@ def display_development_plans_cards(plans, key_suffix=""):
                 ):
                     if cast_vote(plan['id'], 'downvote'):
                         st.success("✅ Downvote recorded!")
-                        st.rerun()  # Use st.rerun() instead of st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("❌ Failed to record vote")
             
@@ -366,6 +581,14 @@ def display_upload_section():
     """Display the file upload section for development plans"""
     st.header("📤 Upload Development Plan")
     st.markdown("Share your development proposal with the community for feedback and voting.")
+    
+    # Show SMS notification status
+    if SMS_ENABLED and st.session_state.get('sms_notifications_enabled', True):
+        subscriber_count = len(st.session_state.get('subscriber_phones', []))
+        if subscriber_count > 0:
+            st.info(f"📱 SMS alerts will be sent to {subscriber_count} subscribers when you upload a plan")
+        else:
+            st.info("📱 No SMS subscribers yet. Visit the SMS Management tab to add subscribers.")
     
     # Upload form with actual functionality
     with st.form("upload_plan_form", clear_on_submit=True):
@@ -578,6 +801,9 @@ def initialize_community_data():
     # Initialize vote history tracking if not exists
     if 'vote_history' not in st.session_state:
         st.session_state.vote_history = {}
+    
+    # Initialize SMS data
+    initialize_sms_data()
 
 def main():
     """Main function for the Community Voting page"""
@@ -591,11 +817,12 @@ def main():
     
     📋 **For Contractors**: Upload your development plans and get community feedback  
     🗳️ **For Community**: Review and vote on proposed developments in your area  
-    📊 **For Everyone**: View voting results and community sentiment
+    📊 **For Everyone**: View voting results and community sentiment  
+    📱 **SMS Alerts**: Get notified instantly when new development plans are posted
     """)
     
     # Create main layout with tabs for better organization
-    tab1, tab2, tab3 = st.tabs(["📤 Upload Plan", "📋 View Plans", "📊 Voting Results"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📤 Upload Plan", "📋 View Plans", "📊 Voting Results", "📱 SMS Management"])
     
     with tab1:
         display_upload_section()
@@ -605,6 +832,9 @@ def main():
     
     with tab3:
         display_voting_section()
+    
+    with tab4:
+        display_sms_management_section()
 
 if __name__ == "__main__":
     # Initialize community data
